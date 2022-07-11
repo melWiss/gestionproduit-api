@@ -1,14 +1,17 @@
 package com.epi.gestionproduit.services;
 
+
 import com.epi.gestionproduit.entities.Produit;
 import com.epi.gestionproduit.repositories.ProduitRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -34,5 +37,35 @@ public class ProduitServiceImpl implements ProduitService{
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public List<Produit> supprimerProduit(List<Integer> ids) {
+        List<Produit> prod = pr.findAllById(ids);
+        pr.deleteAllById(ids);
+        return prod;
+    }
+
+    
+    @Override
+    public String uploadImage(MultipartFile file) {
+        String nomPhoto = file.getOriginalFilename();
+        String tab[] = nomPhoto.split("\\.");
+        String newname = tab[0]+System.currentTimeMillis()+"."+tab[1];
+        Path p = Paths.get(System.getProperty("user.home")+"/Photos/angular/", newname);
+        try {
+            Files.write(p, file.getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return newname;
+    }
+
+    @Override
+    public Produit addProduit(Produit produit, MultipartFile file) {
+        String photo = uploadImage(file);
+        produit.setPhoto(photo);
+        Produit prod = pr.save(produit);
+        return prod;
     }
 }
